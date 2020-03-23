@@ -1,5 +1,3 @@
-
-isStop = true
 -- 唱名键盘映射表
 keyMap = {}
 
@@ -2147,27 +2145,6 @@ function contains(arr, element)
     return false
 end
 
--- 同时按多个键
-function PressKeys(keys)
-    for i, v in ipairs(keys) do
-        PressKey(v)
-    end
-end
-
--- 同时释放多个键
-function ReleaseKeys(keys)
-    for i, v in ipairs(keys) do
-        ReleaseKey(v)
-    end
-end
-
--- 同时按下立即释放多个键
-function PressAndReleaseKes(keys)
-    for i, v in ipairs(keys) do
-        PressAndReleaseKey(v)
-    end
-end
-
 -- 从和弦中获取在键盘中对应的键位
 function getKeysFromChord(chord)
     -- 得多和弦的组成音
@@ -2190,9 +2167,6 @@ function play(music)
 		OutputLogMessage("...chapter_%d start...\n",i)
 		-- roll_call唱名，note音符，如八分音符
         for i, note in ipairs(chapter) do
-            if(isStop) then
-                return
-            end
             -- 旋律音对应的键
             local key = keyMap[note["rc"]]
             -- 和弦
@@ -2206,7 +2180,7 @@ function play(music)
 				OutputLogMessage("time:%d, ", time)
                 if type(chord) ~= "nil" then
                     OutputLogMessage("chord:%s ", chord)
-                    PressAndReleaseKes(keys)
+                    PressAndReleaseKey(unpack(keys))
                 end
                 Sleep(time)
 			else
@@ -2219,9 +2193,9 @@ function play(music)
                     if(not contains(keys, key)) then
                         table.insert(keys, key)
                     end
-                    PressKeys(keys)
+                    PressKey(unpack(keys))
                     Sleep(time)
-                    ReleaseKeys(keys)
+                    ReleaseKey(unpack(keys))
                 else            
                     PressKey(key)
                     Sleep(time)
@@ -2240,13 +2214,8 @@ function OnEvent(event, arg)
     OutputLogMessage("%s, %d\n", event, arg)
     if(event == "MOUSE_BUTTON_PRESSED") then
         if(arg == 5) then
-            isStop = false
             play(dao_gu_peng_you())
                     --play(qingtian)
-        elseif(arg == 4) then
-            if(not isStop) then
-                isStop = true
-            end
         end
     end
 end
