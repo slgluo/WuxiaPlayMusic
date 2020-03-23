@@ -1,3 +1,6 @@
+-- 模式
+debug = true
+
 -- 唱名键盘映射表
 keyMap = {}
 
@@ -2177,15 +2180,15 @@ function play(music)
 			local time = (60 * 1000 / music["bpm"]) / (note["note"] / music["beat_m"])
 			if type(key) == "nil" then
                 OutputLogMessage("rc:%s, key:nil, ", note["rc"], key)
-				OutputLogMessage("time:%d, ", time)
+				OutputLogMessage("time:%.1f, ", time)
                 if type(chord) ~= "nil" then
                     OutputLogMessage("chord:%s ", chord)
-                    PressAndReleaseKey(unpack(keys))
+                    PressAndReleaseKey(table.unpack(keys))
                 end
                 Sleep(time)
 			else
 				OutputLogMessage("rc:%s, key:%s, ", note["rc"], key)
-                OutputLogMessage("time:%d, ", time)
+                OutputLogMessage("time:%.1f, ", time)
                 -- 如果存在和弦
                 if type(chord) ~= "nil" then
                     OutputLogMessage("chord:%s ", chord)
@@ -2193,9 +2196,9 @@ function play(music)
                     if(not contains(keys, key)) then
                         table.insert(keys, key)
                     end
-                    PressKey(unpack(keys))
+                    PressKey(table.unpack(keys))
                     Sleep(time)
-                    ReleaseKey(unpack(keys))
+                    ReleaseKey(table.unpack(keys))
                 else            
                     PressKey(key)
                     Sleep(time)
@@ -2219,3 +2222,35 @@ function OnEvent(event, arg)
         end
     end
 end
+
+-------------------------- debug code ---------------------------------------
+-- 使用时，需要注释以下代码
+-----------------------------------------------------------------------------
+
+function OutputLogMessage(formatMsg, ...)
+    print(string.format(formatMsg, ...))
+end
+
+function PressKey(...)
+    for i, v in ipairs({...}) do
+        OutputLogMessage("%s was pressed", v)
+    end
+end
+
+function ReleaseKey(...)
+    for i, v in ipairs({...}) do
+        OutputLogMessage("%s was released", v)
+    end
+end
+
+function PressAndReleaseKey(...)
+    for i, v in ipairs({...}) do
+        OutputLogMessage("%s was pressed and released", v)
+    end
+end
+
+function Sleep(time)
+    OutputLogMessage("sleep %.1f", time)
+end
+
+OnEvent("MOUSE_BUTTON_PRESSED", 5)
