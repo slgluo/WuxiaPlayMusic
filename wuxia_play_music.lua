@@ -120,9 +120,7 @@ function play(music)
                 if type(chord) ~= "nil" then
                     OutputLogMessage("chord:%s ", chord)
                     -- 如果和弦音中已经存在旋律音，直接弹和弦音。否则，将旋律音加人
-                    if(not contains(keys, key)) then
-                        table.insert(keys, key)
-                    end
+                    table.insert(keys, key)
                     PressKey(unpack(keys))
                     Sleep(time)
                     ReleaseKey(unpack(keys))
@@ -145,8 +143,8 @@ function OnEvent(event, arg)
     if(event == "MOUSE_BUTTON_PRESSED") then
         if(arg == 5) then
             -- 导入曲谱
-            local dao_gu_peng_you = dofile("E:/lua/WuxiaPlayMusic/dao_gu_peng_you.lua")
-            play(dao_gu_peng_you())
+            local music = dofile("E:/WuxiaPlayMusic/music.lua")
+            play(music())
         end
     end
 end
