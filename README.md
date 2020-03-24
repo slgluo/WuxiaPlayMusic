@@ -32,7 +32,7 @@
 
 > 导入自动弹奏脚本 `wuxia_play_music.lua`
 
-![images/导入脚本](./images/导入脚本.png)
+![导入脚本](./images/导入脚本.png)
 
 ### 第三步：选择弹奏的曲谱
 
