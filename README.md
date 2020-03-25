@@ -4,17 +4,17 @@
 ## 一、前提条件
 
  1. 当然了，你需要拥有一个G系列的罗技鼠标，具有宏编程的功能。
- 2. 由于天崖明月刀自由弹奏的音阶属于C大调音阶，没有升降调，所以只能弹奏C大调的歌曲。
+ 2. 由于天崖明月刀自由弹奏的音阶属于C大调音阶，没有升降调，所以只能弹奏C大调的歌曲。一般歌谱左上角标有，如 1 = C
 
 因此具有乐理的同学可以通过转调编谱，本人乐理知识有限，太菜o(╯□╰)o
 
 ## 二、原理
 通过lua宏编程模拟键盘输入，根据音符。仔细说就是，通过录入去曲谱，根据唱名(1234567)，匹配自由弹奏中对应的键位，然后模拟按键输入。
 
-## 三、使用方法
+## 三、脚本使用方法
 ### 第一步：为鼠标创建天刀专属配置文件
 
-> 创建专属的配置文件是为了方便管理和切换，避免和其他游戏或者软件的配置文件冲突
+> 打开罗技鼠标配置软件，创建专属的配置文件是为了方便管理和切换，避免和其他游戏或者软件的配置文件冲突
 
 ![新建配置文件](./images/新建配置文件.png)
 
@@ -32,11 +32,16 @@
 
 > 导入自动弹奏脚本 `wuxia_play_music.lua`
 
+`wuxia_play_music.lua`可以从文章最后那里复制粘贴，可以戳这里拿 [源码](https://slgluo.coding.net/p/WuxiaPlayMusic/d/WuxiaPlayMusic/git)
+
 ![导入脚本](./images/导入脚本.png)
 
 ### 第三步：选择弹奏的曲谱
 
-> 在 `E:/WuxiaPlayMusic/`文件夹下放入曲谱 `music.lua`
+> 在 `E:/WuxiaPlayMusic/`文件夹下放入曲谱 `music.lua`。
+
+[曲谱戳这里](https://slgluo.coding.net/p/WuxiaPlayMusic/d/WuxiaPlayMusic/git)
+在 `songs` 文件夹中，目前有《卡农》、《我的一个道姑朋友》、《晴天》和《贝加尔湖畔》，目前正在增加中...，曲谱重命名成`music.lua`放到正确的位置就行了
 
 1. 如果没有`WuxiaPlayMusic`文件夹则手动新建
 2. 如果想放在其他位置，在`wuxia_play_music.lua`中找到以下代码，手动修改为喜欢的位置
@@ -55,6 +60,8 @@ function OnEvent(event, arg)
     end
 end
 ```
+
+
 ### 第四步，自动弹奏
 启动游戏，进入自由弹奏模式，按下==鼠标侧键前进键==，开始弹奏
 
@@ -90,10 +97,11 @@ function ka_nong()
         {["rc"] = "-", ["note"] = 4},
 		...
 	}
-	table.insert(music, chapter_1)
+	table.insert(music, chapter)
 
     return source
-}
+end
+
 -- 这里别忘了写，和开头的名字一样
 return ka_nong
 ```
@@ -107,7 +115,10 @@ return ka_nong
 * 高中低音：_ 下划线开头为低音，无前后缀为中音，_ 下划线结尾为低音
 
 ## 五、源代码
-
+### 源代码的使用方式
+1. 在电脑系统盘除外的任意位置新建，如 `wuxia_play_music.lua`的文件
+2. 将以下代码复制到刚才创建的文件中
+3. 按照以上**脚本使用方法**导入
 ``` lua
 -- 模式
 debug = true
@@ -294,3 +305,4 @@ end
 
 ```
 
+[源代码戳这里](https://slgluo.coding.net/p/WuxiaPlayMusic/d/WuxiaPlayMusic/git)
