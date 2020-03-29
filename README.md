@@ -25,8 +25,7 @@
 ### 第二步：导入自动弹奏脚本
 1. 在系统盘除外的任意盘创建`WuxiaPlayMusic`文件夹
 2. 在`WuxiaPlayMusic`文件夹下新建`wuxia_play_music.lua`，`wuxia_play_music.lua`可以从文章最后那里复制粘贴到里面，也可以戳这里直接下载 [源码](https://slgluo.coding.net/p/WuxiaPlayMusic/d/WuxiaPlayMusic/git)
-3. 指定脚本路径
-在`wuxia_play_music.lua`中找到以下代码，修改为`WuxiaPlayMusic`文件夹的路径
+3. 指定脚本路径。在`wuxia_play_music.lua`中找到以下代码，修改为`WuxiaPlayMusic`文件夹的路径
 
 ``` lua
 -- 脚本路径，注意斜杠方向
@@ -34,11 +33,11 @@ scriptDir = "E:/WuxiaPlayMusic"
 ```
 
 
-3. 选择刚才在==罗技鼠标配置软件==创建的配置，右键，选择==编写脚本==
+4. 选择刚才在==罗技鼠标配置软件==创建的配置，右键，选择==编写脚本==
 
 ![编写脚本](./images/编写脚本.png)
 
-4. 导入自动弹奏脚本 `wuxia_play_music.lua`
+5. 导入自动弹奏脚本 `wuxia_play_music.lua`
 
 ![导入脚本](./images/导入脚本.png)
 
