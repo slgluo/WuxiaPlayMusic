@@ -1,6 +1,16 @@
 -- 模式
 debug = true
 
+-- 歌单
+-- 要和歌谱文件名一样
+songList = {
+    "love_story",
+    "ka_nong",
+    "dao_gu_peng_you",
+    "qing_tian",
+    "bei_jia_er_hu_pan"
+}
+
 -- 唱名键盘映射表
 keyMap = {}
 
@@ -31,6 +41,47 @@ keyMap["5_"] = "5"
 keyMap["6_"] = "6"
 keyMap["7_"] = "7"
 
+----------------------- 键位 ---------------------------
+--开始和停止的键，
+
+-- 键位: 只能是numlock,scrolllock,capslock
+modifierBtn = {
+    -- 停止键
+    ["stop"] = "scrolllock",
+    -- 下一首
+    ["next"] = "capslock"
+}
+-- 开始键，中键
+mouseBtn = {
+    ["start"] = 3
+}
+StartKey = 3
+
+
+--------------------------------------------------------
+
+-- 是否正在弹奏
+isPlay = false
+
+-- 脚本位置
+scriptDir = "E:/WuxiaPlayMusic"
+-- 歌单文件夹
+songsDir = "/songs"
+-- 歌单存储的路径
+songListPath = scriptDir..songsDir
+
+-- 任务队列
+taskList = {}
+
+currentTask = ""
+
+currentIndex = -1
+
+taskRunningTime = 0
+
+----------------------------------------------------------------------------
+--------------------------------工具函数------------------------------------
+----------------------------------------------------------------------------
 -- 字符串分割
 function split(str,delimiter)
     local dLen = string.len(delimiter)
@@ -75,6 +126,15 @@ function contains(arr, element)
     return false
 end
 
+-- 获取表长度
+function table_leng(t)
+    local leng=0
+    for k, v in pairs(t) do
+      leng=leng+1
+    end
+    return leng;
+end
+
 -- 从和弦中获取在键盘中对应的键位
 function getKeysFromChord(chord)
     -- 得多和弦的组成音
@@ -89,14 +149,58 @@ function getKeysFromChord(chord)
     return keys
 end
 
--- 弹奏
+-- 防抖函数
+function debounce(func, time)
+    OutputLogMessage("debounce\n")
+    timeout = nil
+    return function()
+        if(timeout ~= nil) then
+            OutputLogMessage("timeout ~= nil\n")
+            clearTimeout(timeout)
+        end
+        timeout = setTimeout(func, time)
+    end
+end
+
+-- 超时函数
+function setTimeout(func, timeout)
+    local thread = function()
+        OutputLogMessage("setTimeout\n")
+        Sleep(timeout)
+        func()
+    end
+    local to = coroutine.create(thread)
+    coroutine.resume(to)
+    return to
+end
+
+-- 清除延时
+function clearTimeout(timeout)
+    timeout = nil
+    coroutine.yield()
+end
+-----------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------
+------------------------------ 弹奏相关函数----------------------------------
+----------------------------------------------------------------------------
+-- 开始弹奏
 function play(music)
-	OutputLogMessage("play\n")
+    isPlay = true
 	local m = music["music"]
 	for i, chapter in ipairs(m) do
 		OutputLogMessage("...chapter_%d start...\n",i)
 		-- roll_call唱名，note音符，如八分音符
         for i, note in ipairs(chapter) do
+            local startTime = GetRunningTime()
+            if(IsKeyLockOn(modifierBtn.stop) == false) then
+                OutputLogMessage("stop play\n",i)
+                stop()
+            elseif IsKeyLockOn(modifierBtn.next) then
+                PressAndReleaseKey(modifierBtn.next)
+                next()
+            end
             -- 旋律音对应的键
             local key = keyMap[note["rc"]]
             -- 和弦
@@ -105,8 +209,10 @@ function play(music)
             local keys = getKeysFromChord(chord)
 			-- 时值
 			local time = (60 * 1000 / music["bpm"]) / (note["note"] / music["beat_m"])
-			if type(key) == "nil" then
-                OutputLogMessage("rc:%s, key:nil, ", note["rc"], key)
+            if type(key) == "nil" then
+                if type(note["rc"]) ~= "nil" then
+                    OutputLogMessage("rc:%s, key:nil, ", note["rc"], key)
+                end
 				OutputLogMessage("time:%.1f, ", time)
                 if type(chord) ~= "nil" then
                     OutputLogMessage("chord:%s ", chord)
@@ -133,25 +239,150 @@ function play(music)
             end
             chord = nil
             OutputLogMessage("\n")
-		end
+        end
+        
 		OutputLogMessage("...chapter_%d end...\n",i)
     end
+    stop()
 end
 
-function OnEvent(event, arg)
-    OutputLogMessage("%s, %d\n", event, arg)
-    if(event == "MOUSE_BUTTON_PRESSED") then
-        if(arg == 5) then
-            -- 导入曲谱
-            local music = dofile("E:/WuxiaPlayMusic/music.lua")
-            play(music())
+function start(song)
+    OutputLogMessage("play %s\n", song["name"])
+    local task = createTask(song["name"], play, song["song"])
+    local status, playStatus = doTask(task)
+    if(status) then
+        if(playStatus == "stop") then
+            isPlay = false
+            currentIndex = -1
+            OutputLogMessage("play finished\n")
+        elseif(playStatus == "next") then
+            -- OutputLogMessage("play next\n")
+            local nextFunc = debounce(next, 1000)
+            nextFunc()
+        elseif(playStatus == "prev") then
+            -- OutputLogMessage("play prev\n")
+            local prevFunc = debounce(prev, 1000)
+            prevFunc()
         end
     end
 end
 
--------------------------- debug code ---------------------------------------
--- 使用时，需要注释以下代码
------------------------------------------------------------------------------
+-- 停止弹奏
+function stop()
+    if(IsKeyLockOn("scrolllock")) then
+        PressAndReleaseKey("scrolllock")
+    end
+    currentTask.backParam = "stop"
+    cancelTask(currentTask)
+end
+
+-- 下一首
+function next()
+    OutputLogMessage("next\n")
+    currentTask.backParam = "next"
+    cancelTask(currentTask)
+    -- 第一次默认弹奏第一首
+    local song = nil
+
+    if(currentIndex == table_leng(songList)) then
+        currentIndex = 1
+    else    
+        currentIndex = currentIndex + 1
+    end
+    song = loadSong(currentIndex)
+    start(song)
+end
+
+-- 上一首
+function prev()
+    OutputLogMessage("prev\n")
+    currentTask.backParam = "prev"
+    cancelTask(currentTask)
+    -- 第一次默认弹奏第一首
+    local song = nil
+    if(currentIndex == 1) then
+        local songSize = table_leng(songList)
+        currentIndex = songSize
+    else
+        currentIndex = currentIndex - 1
+    end
+    song = loadSong(currentIndex)
+    start(song)
+end
+
+
+-- 加载歌曲
+function loadSong(index)
+    local songSize = table_leng(songList)
+    local songName = ""
+    if(index >= 1 and index <= songSize) then
+        songName = songList[index]
+        local getSong =  dofile(songListPath.."/"..songName..".lua")
+        return {["name"] = songName, ["song"] = getSong()}
+    else
+        return songName, nil
+    end
+end
+
+-------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+-------------------------------框架代码----------------------------------------
+-------------------------------------------------------------------------------
+
+
+-- 添加任务到任务队列
+function createTask(key, run, param)
+    local task = {}
+    task.key = key
+    task.param = param
+    local runFunc = coroutine.create(run)
+    task.run = runFunc
+    taskList[key] = task.run
+    return task
+end
+
+-- 执行任务
+function doTask(task)
+    currentTask = task
+    return coroutine.resume(task.run, task.param)
+end
+
+function cancelTask(task)
+    local status = false
+    if(coroutine.status(task.run) == 'running') then
+        taskList[task.key] = nil
+        status = coroutine.yield(task.backParam)
+    end
+end
+
+bEnable = false
+
+function OnEvent(event, arg)
+    OutputLogMessage("%s, %d\n", event, arg)
+    if(event == "MOUSE_BUTTON_PRESSED" and bEnable == false and IsKeyLockOn(modifierBtn.stop) == false) then
+        bEnable = true
+        if(arg == mouseBtn.start) then
+            PressAndReleaseKey(modifierBtn.stop)
+            Sleep(20)
+            if(not isPlay) then
+                if(currentIndex == -1) then
+                    currentIndex = 1
+                    start(loadSong(currentIndex))
+                end
+            end
+        end
+        bEnable = false
+    end
+end
+-------------------------------------------------------------------------
+
+
+
+---------------------- debug code ---------------------------------------
+-- ---------------使用时，需要注释以下代码
+-------------------------------------------------------------------------
 
 -- function OutputLogMessage(formatMsg, ...)
 --     print(string.format(formatMsg, ...))
@@ -175,8 +406,13 @@ end
 --     end
 -- end
 
+-- function IsMouseButtonPressed(key)
+--     OutputLogMessage("%s IsMouseButtonPressed", v)
+--     return true
+-- end
+
 -- function Sleep(time)
 --     OutputLogMessage("sleep %.1f", time)
 -- end
 
--- OnEvent("MOUSE_BUTTON_PRESSED", 5)
+-- OnEvent("MOUSE_BUTTON_PRESSED", StartKey)
