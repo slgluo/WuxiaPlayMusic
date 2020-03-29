@@ -1,4 +1,4 @@
-function ka_nong()
+-- 卡农
     local source = {}
 
     -- 一分钟80拍
@@ -862,6 +862,3 @@ function ka_nong()
     table.insert(music, chapter_1)
 
     return source
-end
-
-return ka_nong

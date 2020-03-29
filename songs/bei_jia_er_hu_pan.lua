@@ -1,4 +1,4 @@
-function bei_jia_er_hu_pan()
+-- 贝加尔湖畔
     local source = {}
 
     -- 一分钟80拍
@@ -415,6 +415,3 @@ function bei_jia_er_hu_pan()
     table.insert(music, chapter_1)
 
     return source
-end
-
-return bei_jia_er_hu_pan

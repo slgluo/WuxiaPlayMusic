@@ -59,46 +59,40 @@ scriptDir = "E:/WuxiaPlayMusic"
 
 ``` lua
 -- 卡农曲谱
--- `ka_nong`可以随便取，不要有特殊符号
-function ka_nong()
-    local source = {}
+local source = {}
 
-    -- 一分钟80拍，控制弹奏速度
-    source["bpm"] = 80
+-- 一分钟80拍，控制弹奏速度
+source["bpm"] = 80
 	
-    -- beat_n一个小节有n拍，
-    source["beat_n"] = 4
+-- beat_n一个小节有n拍，
+source["beat_n"] = 4
 	
-    -- beat_m分音符为一拍
-    source["beat_m"] = 4
+-- beat_m分音符为一拍
+source["beat_m"] = 4
 
-    local chords = source["chords"]
+local chords = source["chords"]
 
-    source["music"] = {}
-    music = source["music"]
+source["music"] = {}
+music = source["music"]
 
-    -- rc:唱名,音高（选填）。可以在这个地方编写旋律音，也可以不写，代替的方式是旋律音也写在chord中
-	-- note:代表时值（必填），如4分音符，8分音符
-	-- chord: 和音（选填），即大家所说的双键，rc和chord会同时按下。旋律音也可以写到这里
-    chapter = {
-        -- 三个参数都填
-        {["rc"] = "3_", ["note"] = 4, ["chord"] = "1,5,1_"},
-        -- 效果和上面一样
-        {["note"] = 4, ["chord"] = "1,5,1_,3_"},
+-- rc:唱名,音高（选填）。可以在这个地方编写旋律音，也可以不写，代替的方式是旋律音也写在chord中
+-- note:代表时值（必填），如4分音符，8分音符
+-- chord: 和音（选填），即大家所说的双键，rc和chord会同时按下。旋律音也可以写到这里
+chapter = {
+    -- 三个参数都填
+    {["rc"] = "3_", ["note"] = 4, ["chord"] = "1,5,1_"},
+    -- 效果和上面一样
+    {["note"] = 4, ["chord"] = "1,5,1_,3_"},
         
-        -- 休止符等不弹的情况
-        {["rc"] = "-", ["note"] = 4},
-        -- 效果和上面一样
-        {["note"] = 4},
+    -- 休止符等不弹的情况
+    {["rc"] = "-", ["note"] = 4},
+    -- 效果和上面一样
+    {["note"] = 4},
 		...
-	}
-	table.insert(music, chapter)
+}
+table.insert(music, chapter)
 
-    return source
-end
-
--- 这里别忘了写，和开头的名字一样
-return ka_nong
+return source
 ```
 **参数说明：**
 
@@ -118,36 +112,21 @@ return ka_nong
 在`wuxia_play_music.lua`中找到以下代码，并添加到里面，要和歌谱文件名一样，否则无法弹奏
 
 ``` lua
--- 歌单
--- 要和歌谱文件名一样
-songList = {
-    "sjnmdhsxyjn",
-    "love_story",
-    "ka_nong",
-    "dao_gu_peng_you",
-    "qing_tian",
-    "bei_jia_er_hu_pan"
-}
-```
-
-
-
-## 五、源代码
-
-``` lua
 -- 模式
 debug = true
 
 -- 歌单
 -- 要和歌谱文件名一样
 songList = {
-    "sjnmdhsxyjn",
-    "love_story",
     "ka_nong",
-    "dao_gu_peng_you",
+    "love_story",
     "qing_tian",
-    "bei_jia_er_hu_pan"
+    "bei_jia_er_hu_pan",
+    "dao_gu_peng_you",
 }
+
+-- 已加载的歌曲列表
+loadedSongList = {}
 
 -- 唱名键盘映射表
 keyMap = {}
@@ -200,17 +179,16 @@ StartKey = 3
 
 -- 是否正在弹奏
 isPlay = false
+
+-- 脚本位置
+scriptDir = "E:/WuxiaPlayMusic"
+-- 歌单文件夹
+songsDir = "/songs"
 -- 歌单存储的路径
-songListDir = "E:/WuxiaPlayMusic/songs"
-
--- 任务队列
-taskList = {}
-
-currentTask = ""
+songListPath = scriptDir..songsDir
 
 currentIndex = -1
 
-taskRunningTime = 0
 
 ----------------------------------------------------------------------------
 --------------------------------工具函数------------------------------------
@@ -245,20 +223,6 @@ function split(str,delimiter)
     return arr
 end
 
--- 判断arr中是否存在某个元素
-function contains(arr, element)
-    if not table then
-        return false 
-    end 
-          
-    for k, v in pairs(arr) do
-        if v.tableName ==b then
-             return true
-        end
-    end
-    return false
-end
-
 -- 获取表长度
 function table_leng(t)
     local leng=0
@@ -281,37 +245,6 @@ function getKeysFromChord(chord)
     end
     return keys
 end
-
--- 防抖函数
-function debounce(func, time)
-    OutputLogMessage("debounce\n")
-    timeout = nil
-    return function()
-        if(timeout ~= nil) then
-            OutputLogMessage("timeout ~= nil\n")
-            clearTimeout(timeout)
-        end
-        timeout = setTimeout(func, time)
-    end
-end
-
--- 超时函数
-function setTimeout(func, timeout)
-    local thread = function()
-        OutputLogMessage("setTimeout\n")
-        Sleep(timeout)
-        func()
-    end
-    local to = coroutine.create(thread)
-    coroutine.resume(to)
-    return to
-end
-
--- 清除延时
-function clearTimeout(timeout)
-    timeout = nil
-    coroutine.yield()
-end
 -----------------------------------------------------------------------------
 
 
@@ -326,13 +259,21 @@ function play(music)
 		OutputLogMessage("...chapter_%d start...\n",i)
 		-- roll_call唱名，note音符，如八分音符
         for i, note in ipairs(chapter) do
-            local startTime = GetRunningTime()
             if(IsKeyLockOn(modifierBtn.stop) == false) then
-                OutputLogMessage("stop play\n",i)
-                stop()
-            elseif IsKeyLockOn(modifierBtn.next) then
-                PressAndReleaseKey(modifierBtn.next)
-                next()
+                if(IsKeyLockOn("scrolllock")) then
+                    PressAndReleaseKey("scrolllock")
+                end
+                return "stop"
+            elseif(IsKeyLockOn(modifierBtn.next) and isPlay == true) then
+                -- 有时候关不掉，关掉再结束协程
+                while(IsKeyLockOn(modifierBtn.next)) do
+                    OutputLogMessage("modifierBtn.next is on\n")
+                    PressAndReleaseKey(modifierBtn.next)
+                    Sleep(50)
+                end
+                isPlay = false
+                Sleep(2000)
+                return "next"
             end
             -- 旋律音对应的键
             local key = keyMap[note["rc"]]
@@ -371,53 +312,43 @@ function play(music)
 
             end
             chord = nil
-            OutputLogMessage("\n")
+            OutputLogMessage("\n",i)
         end
-        
 		OutputLogMessage("...chapter_%d end...\n",i)
     end
     stop()
 end
 
 function start(song)
-    OutputLogMessage("play %s\n", song["name"])
-    local task = createTask(song["name"], play, song["song"])
-    local status, playStatus = doTask(task)
+    if(type(song["song"]) == "nil") then
+        OutputLogMessage("在songs文件夹中没有这首曲谱，或曲谱格式错误\n")
+        next()
+        return
+    end
+    OutputLogMessage("start %s\n", song["name"])
+
+    local playThread = coroutine.create(play)
+    local status, playStatus = coroutine.resume(playThread, song["song"])
     if(status) then
         if(playStatus == "stop") then
             isPlay = false
             currentIndex = -1
-            OutputLogMessage("play finished\n")
+            OutputLogMessage("stop play\n")
         elseif(playStatus == "next") then
-            -- OutputLogMessage("play next\n")
-            local nextFunc = debounce(next, 1000)
-            nextFunc()
+            next()
         elseif(playStatus == "prev") then
-            -- OutputLogMessage("play prev\n")
-            local prevFunc = debounce(prev, 1000)
-            prevFunc()
+            prev()
         end
     end
-end
-
--- 停止弹奏
-function stop()
-    if(IsKeyLockOn("scrolllock")) then
-        PressAndReleaseKey("scrolllock")
-    end
-    currentTask.backParam = "stop"
-    cancelTask(currentTask)
 end
 
 -- 下一首
 function next()
     OutputLogMessage("next\n")
-    currentTask.backParam = "next"
-    cancelTask(currentTask)
     -- 第一次默认弹奏第一首
     local song = nil
 
-    if(currentIndex == table_leng(songList)) then
+    if(currentIndex == table_leng(loadedSongList)) then
         currentIndex = 1
     else    
         currentIndex = currentIndex + 1
@@ -429,12 +360,10 @@ end
 -- 上一首
 function prev()
     OutputLogMessage("prev\n")
-    currentTask.backParam = "prev"
-    cancelTask(currentTask)
     -- 第一次默认弹奏第一首
     local song = nil
     if(currentIndex == 1) then
-        local songSize = table_leng(songList)
+        local songSize = table_leng(loadedSongList)
         currentIndex = songSize
     else
         currentIndex = currentIndex - 1
@@ -447,13 +376,22 @@ end
 -- 加载歌曲
 function loadSong(index)
     local songSize = table_leng(songList)
-    local songName = ""
     if(index >= 1 and index <= songSize) then
-        songName = songList[index]
-        local getSong =  dofile(songListDir.."/"..songName..".lua")
-        return {["name"] = songName, ["song"] = getSong()}
-    else
-        return songName, nil
+        return loadedSongList[index]
+    end
+end
+
+-- 加载歌单
+function loadSongList()
+    for index, songFileName in ipairs(songList) do
+        local songPath = songListPath.."/"..songFileName..".lua"
+        local getSong =  loadfile(songPath)
+        if(type(getSong) == "nil") then
+            OutputLogMessage("%s not found in \'songs\' folder or format error\n", songFileName)
+        else
+            OutputLogMessage("%s loaded\n", songFileName)
+            table.insert(loadedSongList, {["name"] = songFileName, ["song"] = getSong()})
+        end
     end
 end
 
@@ -464,37 +402,13 @@ end
 -------------------------------框架代码----------------------------------------
 -------------------------------------------------------------------------------
 
-
--- 添加任务到任务队列
-function createTask(key, run, param)
-    local task = {}
-    task.key = key
-    task.param = param
-    local runFunc = coroutine.create(run)
-    task.run = runFunc
-    taskList[key] = task.run
-    return task
-end
-
--- 执行任务
-function doTask(task)
-    currentTask = task
-    return coroutine.resume(task.run, task.param)
-end
-
-function cancelTask(task)
-    local status = false
-    if(coroutine.status(task.run) == 'running') then
-        taskList[task.key] = nil
-        status = coroutine.yield(task.backParam)
-    end
-end
-
 bEnable = false
 
 function OnEvent(event, arg)
     OutputLogMessage("%s, %d\n", event, arg)
-    if(event == "MOUSE_BUTTON_PRESSED" and bEnable == false and IsKeyLockOn(modifierBtn.stop) == false) then
+    if(event == "PROFILE_ACTIVATED" and arg == 0) then
+        loadSongList()
+    elseif(event == "MOUSE_BUTTON_PRESSED" and bEnable == false and IsKeyLockOn(modifierBtn.stop) == false) then
         bEnable = true
         if(arg == mouseBtn.start) then
             PressAndReleaseKey(modifierBtn.stop)
@@ -544,11 +458,17 @@ end
 --     return true
 -- end
 
+-- function IsKeyLockOn(key)
+--     return false
+-- end
+
 -- function Sleep(time)
 --     OutputLogMessage("sleep %.1f", time)
 -- end
 
--- OnEvent("MOUSE_BUTTON_PRESSED", StartKey)
+-- OnEvent("PROFILE_ACTIVATED", 0)
+--OnEvent("MOUSE_BUTTON_PRESSED", StartKey)
+
 
 
 ```

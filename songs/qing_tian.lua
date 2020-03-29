@@ -1,5 +1,4 @@
 -- 晴天
-function qingtian()
     local source = {}
 
     -- 一分钟80拍
@@ -675,6 +674,3 @@ function qingtian()
     table.insert(music, chapter_55)
     
     return source
-end
-
-return qingtian

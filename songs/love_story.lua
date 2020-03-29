@@ -1,4 +1,4 @@
-function love_story()
+-- love story
     local source = {}
 
     -- 一分钟80拍
@@ -1035,6 +1035,3 @@ function love_story()
     table.insert(music, chapter_1)
     
     return source
-end
-
-return love_story
