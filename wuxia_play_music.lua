@@ -202,7 +202,7 @@ function play(music)
         end
 		OutputLogMessage("...chapter_%d end...\n",i)
     end
-    stop()
+    return "stop"
 end
 
 function start(song)
@@ -219,6 +219,9 @@ function start(song)
         if(playStatus == "stop") then
             isPlay = false
             currentIndex = -1
+            if IsKeyLockOn(modifierBtn.stop) then
+                PressAndReleaseKey(modifierBtn.stop)
+            end
             OutputLogMessage("stop play\n")
         elseif(playStatus == "next") then
             next()
