@@ -4,6 +4,8 @@ debug = true
 -- 歌单
 -- 要和歌谱文件名一样
 songList = {
+    "hong_ri",
+    "sjnmdhsxyjn",
     "ka_nong",
     "love_story",
     "qing_tian",
