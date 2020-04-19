@@ -17,6 +17,18 @@
             "consoleCoding": "utf8"
         },
         {
+            "name": "gen_qin_pu",
+            "type": "lua",
+            "request": "launch",
+            "stopOnEntry": true,
+            "program": "${workspaceFolder}/utils/wuxia_opern_util.lua",
+            "cwd": "${workspaceFolder}",
+            "path": "${workspaceFolder}/?.lua",
+            "cpath": "${workspaceFolder}/?.dll",
+            "arg": [],
+            "consoleCoding": "utf8"
+        },
+        {
             "name": "launch process",
             "type": "lua",
             "request": "launch",

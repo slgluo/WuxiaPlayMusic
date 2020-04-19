@@ -103,6 +103,9 @@ function generateWuxiaOpern(opern, outputPath)
 
     local file = io.open(outputPath .. "/" .. outputFileName, "w")
 
+    file:write("# 天刀乐伶曲谱《》\n")
+    file:write("译谱：池墨墨\n\n")
+
     for i, chapter in ipairs(music) do
         -- 音符总的加起来等于1，即一个全音符
         local noteSum = 0
@@ -146,7 +149,7 @@ function generateWuxiaOpern(opern, outputPath)
                     for j, tone in ipairs(chordTones) do
                         file:write(keyMap[tone])
                     end
-                    io.write(file, ")")
+                    file:write(")")
                 elseif (chordCount > 0) then
                     for j, tone in ipairs(chordTones) do
                         file:write(keyMap[tone])
@@ -168,6 +171,6 @@ function generateWuxiaOpern(opern, outputPath)
     file:close()
 end
 
-getOpern = loadfile("E:/WuxiaPlayMusic/songs/ka_nong.lua")
+getOpern = loadfile("E:/WuxiaPlayMusic/songs/hong_ri.lua")
 
 generateWuxiaOpern(getOpern(), "E:/WuxiaPlayMusic/songs")
