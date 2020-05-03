@@ -105,12 +105,14 @@ function generateWuxiaOpern(opern, outputPath)
 
     file:write("# 天刀乐伶曲谱《》\n")
     file:write("译谱：池墨墨\n\n")
-
+    local chapterSize = 0
     for i, chapter in ipairs(music) do
         -- 音符总的加起来等于1，即一个全音符
         local noteSum = 0
         -- 小节数，没4个小节就换行
         local chapterCount = 0
+
+
 
         for p, v in ipairs(chapter) do
             noteSum = noteSum + (1 / v["note"])
@@ -156,11 +158,15 @@ function generateWuxiaOpern(opern, outputPath)
                     end
                 end
             end
-
-            if (noteSum == 1) then
+            floorNoteSum = math.floor(noteSum * 100000 + 0.5) / 100000
+            if (floorNoteSum == 1) then
                 file:write(" | ")
                 noteSum = 0
                 chapterCount = chapterCount + 1
+                chapterSize = chapterSize + 1
+                if(chapterSize == 26) then
+                    k = 0
+                end
                 if (chapterCount == 4) then
                     chapterCount = 0
                     file:write("\n\n")
@@ -171,6 +177,6 @@ function generateWuxiaOpern(opern, outputPath)
     file:close()
 end
 
-getOpern = loadfile("E:/WuxiaPlayMusic/songs/love_story.lua")
+getOpern = loadfile("E:/WuxiaPlayMusic/songs/jiu_jiu_ba_shi_yi.lua")
 
 generateWuxiaOpern(getOpern(), "E:/WuxiaPlayMusic/songs")
