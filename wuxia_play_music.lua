@@ -4,6 +4,8 @@ debug = true
 -- 歌单
 -- 要和歌谱文件名一样
 songList = {
+    "jiu_jiu_ba_shi_yi",
+    "hei_ren_tai_guan",
     "hong_ri",
     "sjnmdhsxyjn",
     "ka_nong",
@@ -358,4 +360,4 @@ end
 -- end
 
 -- OnEvent("PROFILE_ACTIVATED", 0)
---OnEvent("MOUSE_BUTTON_PRESSED", StartKey)
+-- OnEvent("MOUSE_BUTTON_PRESSED", StartKey)

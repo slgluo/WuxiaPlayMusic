@@ -171,6 +171,6 @@ function generateWuxiaOpern(opern, outputPath)
     file:close()
 end
 
-getOpern = loadfile("E:/WuxiaPlayMusic/songs/hong_ri.lua")
+getOpern = loadfile("E:/WuxiaPlayMusic/songs/love_story.lua")
 
 generateWuxiaOpern(getOpern(), "E:/WuxiaPlayMusic/songs")
